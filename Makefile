@@ -1,7 +1,7 @@
 all:	zout/boot2.cmd boot2.h boot4p
 
 clean:
-	rm -rf zout
+	rm -rf zout boot4p boot2.lst
 
 boot4p: boot2.h *.cpp
 	g++ -o boot4p boot4p.cpp load.cpp listcom.cpp loader.cpp
