@@ -4,7 +4,7 @@ clean:
 	rm -rf zout
 
 boot4p: boot2.h
-	g++ -s -static -o boot4p boot4p.cpp load.cpp listcom.cpp loader.cpp
+	g++ -o boot4p boot4p.cpp load.cpp listcom.cpp loader.cpp
 
 boot2.h: zout/boot2.cmd
 	perl hexb2.pl
