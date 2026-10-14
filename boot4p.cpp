@@ -18,8 +18,11 @@
 #define INVALID_HANDLE_VALUE -1
 #define HANDLE unsigned int
 #define Sleep sleep
+#define _getch getch
 #include <limits.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
+#include <curses.h>
 #endif
 
 #include <unistd.h>
@@ -59,6 +62,8 @@ int com_getc(HANDLE hCom);
 void com_putc(HANDLE hCom, char ch);
 void com_puts(HANDLE hCom, unsigned char *buf, int length);
 void com_closehandle(HANDLE hCom);
+void com_setdtr(HANDLE hCom);
+void com_cleardtr(HANDLE hCom);
 
 int main(int argc, char *argv[])
 {
@@ -175,9 +180,9 @@ int main(int argc, char *argv[])
 		// toggle DTR occassionally until we see the non-zero byte get
 		// echoed back will do.
 
-		EscapeCommFunction(hCom, SETDTR);
+		com_setdtr(hCom);
 		Sleep(100);
-		EscapeCommFunction(hCom, CLRDTR);
+		com_cleardtr(hCom);
 		Sleep(100);
 
 		for (char seq = 0; ; seq++) {
@@ -198,14 +203,16 @@ int main(int argc, char *argv[])
 					if (ch == 0x0f || ch == 9)
 						break;
 				}
+				#ifdef _WIN32
 				if (_kbhit()) {
 					_getch();
 					printf("!");
-					EscapeCommFunction(hCom, SETDTR);
+					com_setdtr(hCom);
 					Sleep(100);
-					EscapeCommFunction(hCom, CLRDTR);
+					com_cleardtr(hCom);
 					Sleep(100);
 				}
+				#endif
 			}
 
 			if (ch == 9)
@@ -319,6 +326,8 @@ HANDLE com_open(int port, int baud, int parity)
 		exit(1);
 	}
 
+	return fd;
+
 	#endif
 }
 
@@ -388,5 +397,27 @@ void com_closehandle(HANDLE hCom) {
 	CloseHandle(hCom);
 	#elif __APPLE__ || __linux__
 	close(hCom);
+	#endif
+}
+
+void com_setdtr(HANDLE hCom) {
+	#ifdef _WIN32
+	EscapeCommFunction(hCom, SETDTR);
+	#elif __APPLE__ || __linux__
+	int status;
+	ioctl(hCom, TIOCMGET, &status);
+	status |= TIOCM_DTR;
+	ioctl(hCom, TIOCMSET, &status);
+	#endif
+}
+
+void com_cleardtr(HANDLE hCom) {
+	#ifdef _WIN32
+	EscapeCommFunction(hCom, CLRDTR);
+	#elif __APPLE__ || __linux__
+	int status;
+	ioctl(hCom, TIOCMGET, &status);
+	status &= ~TIOCM_DTR;
+	ioctl(hCom, TIOCMSET, &status);
 	#endif
 }
