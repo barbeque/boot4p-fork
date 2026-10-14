@@ -272,7 +272,7 @@ HANDLE com_open(int port, int baud, int parity)
 	}
 
 	char com_port[32];
-	sprintf(com_port, "\\\\.\\COM%d", port); // so we can work with COM ports > 9
+	snprintf(com_port, 32, "\\\\.\\COM%d", port); // so we can work with COM ports > 9
 
 	HANDLE hCom = CreateFile(com_port, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 	if (hCom == INVALID_HANDLE_VALUE) {
