@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <conio.h>
 #elif __APPLE__
+#define INVALID_HANDLE_VALUE -1
 #define HANDLE unsigned int
 #define Sleep sleep
 #include <limits.h>
@@ -57,6 +58,7 @@ HANDLE com_open(int port, int baud, int parity);
 int com_getc(HANDLE hCom);
 void com_putc(HANDLE hCom, char ch);
 void com_puts(HANDLE hCom, unsigned char *buf, int length);
+void com_closehandle(HANDLE hCom);
 
 int main(int argc, char *argv[])
 {
