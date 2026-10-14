@@ -15,7 +15,10 @@
 #include <windows.h>
 #include <conio.h>
 #elif __APPLE__
+#define HANDLE unsigned int
 #define Sleep sleep
+#include <limits.h>
+#include <fcntl.h>
 #endif
 
 #include <unistd.h>
@@ -237,7 +240,7 @@ int main(int argc, char *argv[])
 		};
 		com_puts(hCom, prog, 256);
 		printf("And that's all for me!\n");
-		CloseHandle(hCom);
+		com_closehandle(hCom);
 		return 0;
 	}
 
@@ -254,13 +257,15 @@ Sleep(250);//?
 	while ((ch = get_loaded_byte()) >= 0)
 		com_putc(hCom, ch);
 
-	CloseHandle(hCom);
+	com_closehandle(hCom);
 
 	return 0;
 }
 
 HANDLE com_open(int port, int baud, int parity)
 {
+	#ifdef _WIN32
+
 	char com_param[128];
 	sprintf(com_param, "%d,%c,8,1", baud, parity);
 	DCB dcb;
@@ -282,7 +287,7 @@ HANDLE com_open(int port, int baud, int parity)
 
 	if (!SetCommState(hCom, &dcb)) {
 		printf("boot4p: could not set baud rate, etc.\n");
-		CloseHandle(hCom);
+		com_closehandle(hCom);
 		return INVALID_HANDLE_VALUE;
 	}
 
@@ -294,11 +299,25 @@ HANDLE com_open(int port, int baud, int parity)
 	timeouts.WriteTotalTimeoutConstant = 1;
 	if (!SetCommTimeouts(hCom, &timeouts)) {
 		printf("boot4p: could not set timeouts.\n");
-		CloseHandle(hCom);
+		com_closehandle(hCom);
 		return INVALID_HANDLE_VALUE;
 	}
 
 	return hCom;
+
+	#elif __APPLE__ || __linux__
+
+	// TODO: enumerate and select serial ports interactively
+	char path[PATH_MAX];
+	snprintf(path, PATH_MAX, "/dev/tty.usbmodem%i", port);
+
+	int fd = open(path, O_RDONLY | O_NONBLOCK);
+	if(fd == -1) {
+		fprintf(stderr, "boot4p: Unable to open serial port %s\n", path);
+		exit(1);
+	}
+
+	#endif
 }
 
 int com_getc(HANDLE hCom)
@@ -359,5 +378,13 @@ void com_puts(HANDLE hCom, unsigned char *buf, int length)
 		exit(2);
 	}
 
+	#endif
+}
+
+void com_closehandle(HANDLE hCom) {
+	#ifdef _WIN32
+	CloseHandle(hCom);
+	#elif __APPLE__ || __linux__
+	close(hCom);
 	#endif
 }
