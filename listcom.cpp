@@ -10,6 +10,8 @@
  NO COPYRIGHT,  welcome to use for everyone.
 */
 
+#ifdef _WIN32
+
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
@@ -340,3 +342,5 @@ BOOL EnumerateComPortSetupAPISetupDiClassGuidsFromNamePort(UINT *pNumber,
 
  return ret;
 }/*EnumerateComPortSetupAPISetupDiClassGuidsFromNamePort*/
+
+#endif // _WIN32
