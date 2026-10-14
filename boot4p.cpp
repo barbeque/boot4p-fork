@@ -346,9 +346,18 @@ void com_putc(HANDLE hCom, char ch)
 
 void com_puts(HANDLE hCom, unsigned char *buf, int length)
 {
+	#ifdef _WIN32
 	DWORD n = length;
 	if (!WriteFile(hCom, buf, length, &n, NULL)) {
 		printf("boot4p: error writing to COM port\n");
 		exit(2);
 	}
+	#elif __APPLE__ || __linux__
+	
+	if(!write(hCom, buf, length)) {
+		fprintf(stderr, "boot4p: error writing to serial port\n");
+		exit(2);
+	}
+
+	#endif
 }
