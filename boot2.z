@@ -1,0 +1,111 @@
+;
+; boot2.z - load /CMD file from RS-232
+;
+; This is pretty much what the Model 4P ROM does, but we load with memory
+; map 2 so most of RAM can be loaded.  Then we switch back to map 0 so we
+; can run BASIC.  But the "runmap" is easily patched as some may want to
+; run under different maps.
+;
+; And it certainly depends on the RS-232 being all ready and initialized.
+;
+; We can also be patched to relocate to a different position.
+;
+; It would be a little more efficient if the relocation code were to
+; sit right at the start of the page.  But we have an accidental feature
+; that we can relocate to 0 because the stack will not be at exactly 0.
+;
+; Would be nice to show current loading address.
+; And set CPU speed?
+
+	org	$f300
+stack:
+loadmap:defb	0
+runmap:	defb	0
+reorg:	defb	$f3
+start:
+	di
+
+	xor	a
+	out	($9c),a		; get rid of 4P boot ROM
+	ld	a,(loadmap)
+	out	($84),a	
+	cp	2
+	jr	nc,scok
+	ld	a,$3c		; map 0 or 1; screen is at $3c00
+	ld	(scrn+2),a
+
+scok:	ld	a,(runmap)
+	ex	af,af'		; save run-time memory map
+
+	ld	ix,last
+	ld	hl,(reorg-1)	; effectively "ld h,(reorg)"
+	ld	l,low(last+1)
+	ld	b,relen
+
+relo:	dec	hl
+	ld	a,(ix)
+	ld	(hl),a		; copy regardless
+	;ld	(ix),0		; for testing
+	ld	a,$cd		; call opcode
+	cp	(ix-2)		; are we on high byte of call?
+	jr	nz,ntcall
+	ld	(hl),h		; set high byte to relocation page
+ntcall:	dec	ix
+	djnz	relo
+	ld	sp,hl
+	jp	(hl)
+
+first:	ld	hl,btmsg
+scrn:	ld	de,$fc00
+	ld	bc,btmsg_len
+	ldir
+
+load:	call	rsget		; record type
+	dec	a
+	jr	z,data_blk
+	dec	a
+	jr	z,entry_blk
+	call	rsget		; get length of other type of block
+	ld	b,a
+junk:	call	rsget
+	djnz	junk
+	jr	load
+
+data_blk:
+	call	rsget		; get block length
+	sub	a,2
+	ld	b,a
+	call	getaddr		; get load address
+dld:	call	rsget
+	ld	(hl),a		; loading data
+	inc	hl
+	djnz	dld
+	jr	load
+
+entry_blk:
+	call	rsget		; skip size (which must be 2)
+	call	getaddr		; get entry address
+
+	ex	af,af'		; get runtime memory map
+	out	($84),a		; Memory map 0 or whatever was patched in.
+
+	jp	(hl)		; and run loaded code
+
+getaddr:
+	call	rsget
+	ld	l,a
+	call	rsget
+	ld	h,a
+	ret
+
+rsget:	in	a,($ea)
+	and	128
+	jr	z,rsget		; wait until data ready (we ignore errors)
+	in	a,($eb)
+	ld	(de),a
+last:	ret
+relen	equ	$-first
+
+btmsg:	ascii	'Boot2 '
+btmsg_len equ $-btmsg
+	end	start
