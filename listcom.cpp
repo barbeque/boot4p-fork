@@ -10,10 +10,11 @@
  NO COPYRIGHT,  welcome to use for everyone.
 */
 
+#include <stdio.h>
+
 #ifdef _WIN32
 
 #include <windows.h>
-#include <stdio.h>
 #include <tchar.h>
 #include <setupapi.h>
 
@@ -342,5 +343,15 @@ BOOL EnumerateComPortSetupAPISetupDiClassGuidsFromNamePort(UINT *pNumber,
 
  return ret;
 }/*EnumerateComPortSetupAPISetupDiClassGuidsFromNamePort*/
+
+#elif __APPLE__ || __linux__
+
+int listcom(bool print) {
+  // TODO: Search dev for tty devices
+  // for now let's just hardcode the one we want
+  printf("FIXME: hardcoded serial port in use\n");
+
+  return 0;
+}
 
 #endif // _WIN32
