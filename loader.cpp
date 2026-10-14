@@ -492,7 +492,7 @@ char *TRS80Loader::GetErrorMessage()
 
 		char *err = new char[bytesNeeded];
 		if (m_errorLine >= 0)
-			sprintf(err, msg, m_errorLine);
+			snprintf(err, bytesNeeded, msg, m_errorLine);
 		else
 			strcpy(err, msg);
 
@@ -2639,7 +2639,7 @@ void TRS80Loader::PutMediaString(const char *str)
 void TRS80Loader::PutHexByte(int data)
 {
 	char buf[3];
-	sprintf(buf, "%02X", data & 255);
+	snprintf(buf, 3, "%02X", data & 255);
 	PutMediaByte(buf[0]);
 	PutMediaByte(buf[1]);
 }
@@ -2847,7 +2847,7 @@ void TRS80Loader::List(int len, const unsigned char *data, char eol)
 			return;
 
 		char linenum[32];
-		sprintf(linenum, "%d ", data[0] | (data[1] << 8));
+		snprintf(linenum, 32, "%d ", data[0] | (data[1] << 8));
 		data += 2;
 		len -= 2;
 		PutMediaString(linenum);
@@ -2935,7 +2935,7 @@ void TRS80Loader::ListLevel1(int len, const unsigned char *data, char eol)
 	while (len >= 3)
 	{
 		char linenum[32];
-		sprintf(linenum, "%d", data[0] | (data[1] << 8));
+		snprintf(linenum, 32, "%d", data[0] | (data[1] << 8));
 		data += 2;
 		len -= 2;
 		PutMediaString(linenum);
@@ -2990,7 +2990,6 @@ void Source::GetLastError()
 
 	m_type = error;
 }
-
 #else
 
 #include <errno.h>
