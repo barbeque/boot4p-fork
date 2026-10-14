@@ -11,9 +11,14 @@
 // (XXX - or maybe the other way around, time will tell)
 // Not yet functional.
 
+#ifdef _WIN32
 #include <windows.h>
-#include <stdio.h>
 #include <conio.h>
+#endif
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "boot2.h"
 
