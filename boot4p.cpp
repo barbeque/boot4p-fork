@@ -304,12 +304,24 @@ HANDLE com_open(int port, int baud, int parity)
 int com_getc(HANDLE hCom)
 {
 	unsigned char buf[1];
+	
+	#ifdef _WIN32
 	DWORD n;
 
 	if (!ReadFile(hCom, buf, sizeof(buf), &n, NULL)) {
 		printf("boot4p: error reading from COM port\n");
 		exit(1);
 	}
+
+	#elif __APPLE__ || __linux__
+
+	int n = 0;
+	if(!(n = read(hCom, buf, sizeof(buf) - 1))) {
+		fprintf(stderr, "boot4p: error reading from serial port\n");
+		exit(1);
+	}
+
+	#endif
 
 	return n ? buf[0] : -1;
 }
