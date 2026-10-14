@@ -14,8 +14,11 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <conio.h>
+#elif __APPLE__
+#define Sleep sleep
 #endif
 
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
