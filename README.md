@@ -1,4 +1,4 @@
-Original code by George Phillips, located at https://48k.ca/boot4p.html
+Serial bootloader server for TRS-80 Model 4 **Portables**. Original code by George Phillips, located at https://48k.ca/boot4p.html
 
 ## Current status
 **UNTESTED**
